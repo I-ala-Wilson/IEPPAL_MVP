@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -7,12 +7,17 @@ import { IEPContext } from "../context/IEPContext";
 
 export default function GoalForm() {
   const navigate = useNavigate();
-  const { updateGoal, finalizeReport } = useContext(IEPContext);
+  const { goal, updateGoal, finalizeReport } = useContext(IEPContext);
 
-  const [goalOverview, setGoalOverview] = useState("");
-  const [alignedStandard, setAlignedStandard] = useState([]);
-  const [recommendedStrategies, setRecommendedStrategies] = useState([]);
-  const [goalMeasurement, setGoalMeasurement] = useState("");
+  const [goalOverview, setGoalOverview] = useState(goal?.goalOverview || "");
+  const [alignedStandard, setAlignedStandard] = useState(goal?.alignedStandard || []);
+  const [recommendedStrategies, setRecommendedStrategies] = useState(goal?.recommendedStrategies || []);
+  const [goalMeasurement, setGoalMeasurement] = useState(goal?.goalMeasurement || "");
+
+  useEffect(() => { setGoalOverview(goal?.goalOverview || ""); }, [goal?.goalOverview]);
+  useEffect(() => { setAlignedStandard(goal?.alignedStandard || []); }, [goal?.alignedStandard]);
+  useEffect(() => { setRecommendedStrategies(goal?.recommendedStrategies || []); }, [goal?.recommendedStrategies]);
+  useEffect(() => { setGoalMeasurement(goal?.goalMeasurement || ""); }, [goal?.goalMeasurement]);
 
   const standards = [
     "Class A Standard 1",
@@ -35,14 +40,12 @@ export default function GoalForm() {
     "Regular Feedback"
   ];
 
-  // Compute fraction for GoalForm (4 fields)
   let completed = 0;
   if (goalOverview.trim()) completed++;
   if (alignedStandard.length) completed++;
   if (recommendedStrategies.length) completed++;
   if (goalMeasurement) completed++;
   const fraction = completed / 4;
-  // Overall progress for GoalForm = 80 + fraction * 20
   const overallProgress = Math.round(80 + fraction * 20);
 
   const handleStrategyChange = (e) => {
@@ -73,31 +76,43 @@ export default function GoalForm() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />
-        {/* Continuous Progress Bar */}
-        <div className="p-4 max-w-3xl mx-auto">
+        <div className="mt-4 mb-4 max-w-3xl mx-auto">
           <ProgressBar progress={overallProgress} />
-          <p className="text-sm text-gray-600 mt-1">Overall Progress: {overallProgress}%</p>
+          <p className="text-sm text-gray-600 mt-1 text-center">
+            Overall Progress: {overallProgress}%
+          </p>
         </div>
-        <div className="p-8 overflow-auto">
+        <div className="pt-8 p-8 overflow-auto">
           <form onSubmit={handleDone} className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-lg p-10">
             <h2 className="text-3xl font-bold mb-6 text-gray-800">
               Let’s Create Student’s First Goal
             </h2>
+            
+            {/* Goal Overview */}
             <div className="mb-6">
-              <label className="block text-lg font-medium text-gray-700">Goal Overview</label>
+              <label className="block text-lg font-medium text-gray-700">
+                Goal Overview
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Provide a clear, measurable, and time-bound description of the goal using SMART criteria.
+              </p>
               <textarea
                 value={goalOverview}
                 onChange={(e) => setGoalOverview(e.target.value)}
                 className="mt-2 block w-full border border-gray-300 rounded-2xl p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
                 rows="3"
-                placeholder="Describe the goal following the SMART framework..."
+                placeholder="e.g. Improve reading comprehension by 20% by the end of the semester..."
               ></textarea>
-              <p className="text-xs italic text-gray-500 mt-1">
-                When creating a goal, make sure it follows the SMART Framework.
-              </p>
             </div>
+            
+            {/* Aligned Standards */}
             <div className="mb-6">
-              <label className="block text-lg font-medium text-gray-700">Aligned Standards</label>
+              <label className="block text-lg font-medium text-gray-700">
+                Aligned Standards
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Select the academic standards this goal addresses. (Hold Ctrl/Cmd to select multiple.)
+              </p>
               <select
                 multiple
                 value={alignedStandard}
@@ -113,11 +128,21 @@ export default function GoalForm() {
                 ))}
               </select>
             </div>
+            
+            {/* Recommended Strategies */}
             <div className="mb-6">
-              <label className="block text-lg font-medium text-gray-700">Recommended Strategies</label>
+              <label className="block text-lg font-medium text-gray-700">
+                Recommended Strategies
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Choose one or more strategies that you plan to implement to support this goal.
+              </p>
               <div className="flex flex-wrap gap-3 mt-2">
                 {strategies.map((strategy) => (
-                  <label key={strategy} className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 cursor-pointer hover:bg-pink-100 transition-colors">
+                  <label
+                    key={strategy}
+                    className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-2 cursor-pointer hover:bg-pink-100 transition-colors"
+                  >
                     <input
                       type="checkbox"
                       value={strategy}
@@ -130,8 +155,15 @@ export default function GoalForm() {
                 ))}
               </div>
             </div>
+            
+            {/* Goal Measurement */}
             <div className="mb-8">
-              <label className="block text-lg font-medium text-gray-700">Goal Measurement</label>
+              <label className="block text-lg font-medium text-gray-700">
+                Goal Measurement
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Select the type of measurement (e.g. percentage or frequency) to gauge progress.
+              </p>
               <select
                 value={goalMeasurement}
                 onChange={handleGoalMeasurementChange}
@@ -141,10 +173,8 @@ export default function GoalForm() {
                 <option value="Percentage">Percentage (%)</option>
                 <option value="Frequency">Frequency</option>
               </select>
-              <p className="text-xs italic text-gray-500 mt-1">
-                Select a measurable way to track progress toward the goal.
-              </p>
             </div>
+            
             <div className="flex justify-between">
               <button
                 type="button"
@@ -172,7 +202,7 @@ export default function GoalForm() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gradient-to-r from-pastelPink to-pastelOrange text-white rounded-full hover:scale-105 transition-all duration-300"
+                  className="px-6 py-2 bg-gradient-to-r from-pastelPink to-pastelOrange text-white rounded-full hover:scale-105 transition-all duration-500"
                 >
                   Done
                 </button>

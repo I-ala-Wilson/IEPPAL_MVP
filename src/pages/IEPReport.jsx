@@ -1,4 +1,3 @@
-// src/pages/IEPReport.jsx
 import React, { useContext } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -18,112 +17,181 @@ export default function IEPReport() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
 
-    // Page 1: Title
+    // Title
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
     doc.text("INDIVIDUAL EDUCATION PLAN (IEP)", pageWidth / 2, 30, { align: "center" });
 
-    // Student Information Table Title
+    // STUDENT INFORMATION header
     doc.setFontSize(12);
     doc.setFillColor(128, 128, 128);
     doc.rect(margin, 40, pageWidth - margin * 2, 10, "F");
     doc.setTextColor(255);
     doc.text("STUDENT INFORMATION", pageWidth / 2, 47, { align: "center" });
 
-    const studentData = [
-      ["Student Name", "Grade Level", report?.studentInfo?.studentName || "N/A", report?.studentInfo?.grade || "N/A"],
-      ["Preferred Name", "Class", report?.studentInfo?.preferredName || "N/A", report?.studentInfo?.classroom || "N/A"],
-      ["DOB (DDMMYYYY)", "Student ID", report?.studentInfo?.dob || "N/A", report?.studentInfo?.studentId || "N/A"],
-      ["Date of Entry", "Languages", report?.studentInfo?.entryDate || "N/A", report?.studentInfo?.language || "N/A"],
+    // Build student information table as 4 rows x 4 columns:
+    // Row 1: Student Name (prompt, answer), Grade Level (prompt, answer)
+    // Row 2: Preferred Name, Class
+    // Row 3: DOB (DDMMYYYY), Student ID
+    // Row 4: Date of Entry (DDMMYYYY), Languages
+    const studentTableData = [
+      {
+        col1: { content: "Student Name", styles: { fontStyle: "bold" } },
+        col2: report?.studentInfo?.studentName || "N/A",
+        col3: { content: "Grade Level", styles: { fontStyle: "bold" } },
+        col4: report?.studentInfo?.grade || "N/A"
+      },
+      {
+        col1: { content: "Preferred Name", styles: { fontStyle: "bold" } },
+        col2: report?.studentInfo?.preferredName || "N/A",
+        col3: { content: "Class", styles: { fontStyle: "bold" } },
+        col4: report?.studentInfo?.classroom || "N/A"
+      },
+      {
+        col1: { content: "DOB (DDMMYYYY)", styles: { fontStyle: "bold" } },
+        col2: report?.studentInfo?.dob || "N/A",
+        col3: { content: "Student ID", styles: { fontStyle: "bold" } },
+        col4: report?.studentInfo?.studentId || "N/A"
+      },
+      {
+        col1: { content: "Date of Entry (DDMMYYYY)", styles: { fontStyle: "bold" } },
+        col2: report?.studentInfo?.entryDate || "N/A",
+        col3: { content: "Languages", styles: { fontStyle: "bold" } },
+        col4: report?.studentInfo?.language || "N/A"
+      }
     ];
 
     autoTable(doc, {
       startY: 55,
       head: [],
-      body: studentData.flatMap(row => [
-        { content: row[0], styles: { fontStyle: "bold" } },
-        { content: row[1], styles: { fontStyle: "bold" } },
-        row[2],
-        row[3],
-      ]),
+      body: studentTableData,
       columns: [
-        { header: "", dataKey: "leftLabel", width: 45 },
-        { header: "", dataKey: "rightLabel", width: 45 },
-        { header: "", dataKey: "leftValue", width: 45 },
-        { header: "", dataKey: "rightValue", width: 45 },
+        { header: "", dataKey: "col1", cellWidth: (pageWidth - margin * 2) / 4 },
+        { header: "", dataKey: "col2", cellWidth: (pageWidth - margin * 2) / 4 },
+        { header: "", dataKey: "col3", cellWidth: (pageWidth - margin * 2) / 4 },
+        { header: "", dataKey: "col4", cellWidth: (pageWidth - margin * 2) / 4 },
       ],
       theme: "grid",
-      styles: { fontSize: 11, cellPadding: 4, minCellHeight: 15 },
+      styles: { fontSize: 11, cellPadding: 4 },
       margin: { left: margin, right: margin },
+      rowPageBreak: 'avoid'
     });
 
-    // Student Needs Table Title
+    // STUDENT NEEDS header
     doc.setFillColor(128, 128, 128);
     doc.rect(margin, doc.lastAutoTable.finalY + 10, pageWidth - margin * 2, 10, "F");
     doc.setTextColor(255);
     doc.text("STUDENT NEEDS", pageWidth / 2, doc.lastAutoTable.finalY + 17, { align: "center" });
 
+    // Needs table: first row has two columns, subsequent rows span both columns.
     const needsData = [
       [
-        `Functional Need in Area(s) of:\n${report?.needs?.functionalNeeds || "N/A"}\n\n` +
-          `Non-Academic Needs:\n${report?.needs?.nonAcademicNeeds || "N/A"}\n\n` +
-          `Background Information:\n${report?.needs?.backgroundInfo || "N/A"}\n\n` +
-          `Psychoeducational Report Summary:\n${report?.needs?.psychoReport || "N/A"}`,
-        `Diagnosis Awareness (Y/N):\n${report?.needs?.diagnosisAwareness || "N/A"}`
-      ]
+        {
+          content: `Functional Need in Area(s) of:\n${report?.needs?.functionalNeeds || "N/A"}`,
+        },
+        {
+          content: `Diagnosis Awareness (Y/N):\n${report?.needs?.diagnosisAwareness || "N/A"}`,
+        },
+      ],
+      [
+        {
+          content: `Non-Academic Needs:\n${report?.needs?.nonAcademicNeeds || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
+      [
+        {
+          content: `Background Information:\n${report?.needs?.backgroundInfo || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
+      [
+        {
+          content: `Psychoeducational Report Summary:\n${report?.needs?.psychoReport || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
     ];
 
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 20,
       body: needsData,
       columns: [
-        { dataKey: 0, width: pageWidth * 0.7 - margin * 2 },
-        { dataKey: 1, width: pageWidth * 0.3 - margin * 2 },
+        { header: "", dataKey: "col1", width: (pageWidth - margin * 2) / 2 },
+        { header: "", dataKey: "col2", width: (pageWidth - margin * 2) / 2 },
       ],
       theme: "grid",
-      styles: { fontSize: 11, cellPadding: 4, minCellHeight: 80 },
+      styles: { fontSize: 11, cellPadding: 4 },
       margin: { left: margin, right: margin },
+      rowPageBreak: 'avoid'
     });
 
-    // Page 2: Strengths & Areas for Growth Title
-    doc.addPage();
+    // STUDENT STRENGTHS & AREAS FOR GROWTH header (continue on same page)
     doc.setFillColor(128, 128, 128);
-    doc.rect(margin, 30, pageWidth - margin * 2, 10, "F");
+    doc.rect(margin, doc.lastAutoTable.finalY + 10, pageWidth - margin * 2, 10, "F");
     doc.setTextColor(255);
-    doc.text("STUDENT STRENGTHS & AREAS FOR GROWTH", pageWidth / 2, 37, { align: "center" });
+    doc.text("STUDENT STRENGTHS & AREAS FOR GROWTH", pageWidth / 2, doc.lastAutoTable.finalY + 17, { align: "center" });
 
+    // Strengths: one row with two columns
     const strengthsData = [
-      [`Student Strengths:\n${report?.strengths?.strengths || "N/A"}`],
-      [`Student Areas for Growth:\n${report?.strengths?.areasForGrowth || "N/A"}`]
+      [
+        { content: `Student Strengths:\n${report?.strengths?.strengths || "N/A"}` },
+        { content: `Student Areas for Growth:\n${report?.strengths?.areasForGrowth || "N/A"}` },
+      ],
     ];
 
     autoTable(doc, {
-      startY: 45,
+      startY: doc.lastAutoTable.finalY + 20,
       body: strengthsData,
+      columns: [
+        { header: "", dataKey: "col1", width: (pageWidth - margin * 2) / 2 },
+        { header: "", dataKey: "col2", width: (pageWidth - margin * 2) / 2 },
+      ],
       theme: "grid",
       styles: { fontSize: 11, cellPadding: 4, minCellHeight: 40 },
       margin: { left: margin, right: margin },
+      rowPageBreak: 'avoid'
     });
 
-    // Student Goals Table Title
+    // STUDENT GOALS header
     doc.setFillColor(128, 128, 128);
     doc.rect(margin, doc.lastAutoTable.finalY + 10, pageWidth - margin * 2, 10, "F");
     doc.setTextColor(255);
     doc.text("STUDENT GOALS", pageWidth / 2, doc.lastAutoTable.finalY + 17, { align: "center" });
 
+    // Goals table with three rows (each spanning full width)
     const goalsData = [
-      [`Goal Overview:\n${report?.goal?.goalOverview || "N/A"}`],
-      [`Aligned Standards:\n${(report?.goal?.alignedStandard || []).join(", ") || "N/A"}`],
-      [`Recommended Strategies:\n${(report?.goal?.recommendedStrategies || []).join(", ") || "N/A"}`],
-      [`Measurement:\n${report?.goal?.goalMeasurement || "N/A"}`]
+      [
+        {
+          content: `Goal Overview:\n${report?.goal?.goalOverview || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
+      [
+        {
+          content: `Aligned Standards:\n${(report?.goal?.alignedStandard || []).join(", ") || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
+      [
+        {
+          content: `Recommended Strategies:\n${(report?.goal?.recommendedStrategies || []).join(", ") || "N/A"}`,
+          colSpan: 2,
+        },
+      ],
     ];
 
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 20,
       body: goalsData,
+      columns: [
+        { header: "", dataKey: "col1", width: pageWidth - margin * 2 },
+        { header: "", dataKey: "col2", width: 0 },
+      ],
       theme: "grid",
       styles: { fontSize: 11, cellPadding: 4, minCellHeight: 40 },
       margin: { left: margin, right: margin },
+      rowPageBreak: 'avoid'
     });
 
     doc.save(`${report?.studentInfo?.studentName || "IEP_Report"}.pdf`);
@@ -156,22 +224,20 @@ export default function IEPReport() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-auto">
         <Navbar />
-        {/* Progress Bar – IEP Report is complete */}
-        <div className="p-4 max-w-7xl mx-auto">
+        <div className="mt-4 mb-4 max-w-7xl mx-auto">
           <ProgressBar progress={100} />
-          <p className="text-sm text-gray-600 mt-1">Progress: 100%</p>
+          <p className="text-sm text-gray-600 mt-1 text-center">Progress: 100%</p>
         </div>
-        <div id="reportContent" className="p-8 w-full max-w-7xl mx-auto">
+        <div id="reportContent" className="pt-8 p-8 w-full max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold text-gray-800 text-center mb-8">
             IEP Report for {studentInfo.studentName || "N/A"}
           </h1>
           
-          {/* Student Information */}
           <div className="bg-gray-50 p-6 rounded-lg shadow mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center bg-gray-700 text-white p-2 rounded">
               STUDENT INFORMATION
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <InfoRow label="Student Name" value={studentInfo.studentName} />
                 <InfoRow label="Preferred Name" value={studentInfo.preferredName} />
@@ -187,28 +253,19 @@ export default function IEPReport() {
             </div>
           </div>
 
-          {/* Student Needs */}
           <div className="bg-gray-50 p-6 rounded-lg shadow mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center bg-gray-700 text-white p-2 rounded">
               STUDENT NEEDS
             </h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2 space-y-4">
-                <FormattedSection title="Functional Need in Area(s) of:" content={needs.functionalNeeds} />
-                <FormattedSection title="Non-Academic Needs:" content={needs.nonAcademicNeeds} />
-                <FormattedSection title="Background Information:" content={needs.backgroundInfo} />
-                <FormattedSection title="Psychoeducational Report Summary:" content={needs.psychoReport} />
-              </div>
-              <div className="bg-gray-100 p-4 rounded-lg h-full flex items-center justify-center">
-                <div className="text-center">
-                  <p className="font-semibold mb-2">Diagnosis Awareness (Y/N):</p>
-                  <p className="text-lg">{needs.diagnosisAwareness || "N/A"}</p>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 gap-6">
+              <FormattedSection title="Functional Need in Area(s) of:" content={needs.functionalNeeds} />
+              <FormattedSection title="Diagnosis Awareness (Y/N):" content={needs.diagnosisAwareness} />
+              <FormattedSection title="Non-Academic Needs:" content={needs.nonAcademicNeeds} />
+              <FormattedSection title="Background Information:" content={needs.backgroundInfo} />
+              <FormattedSection title="Psychoeducational Report Summary:" content={needs.psychoReport} />
             </div>
           </div>
 
-          {/* Student Strengths & Areas for Growth */}
           <div className="bg-gray-50 p-6 rounded-lg shadow mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center bg-gray-700 text-white p-2 rounded">
               STUDENT STRENGTHS & AREAS FOR GROWTH
@@ -219,22 +276,14 @@ export default function IEPReport() {
             </div>
           </div>
 
-          {/* Student Goals */}
           <div className="bg-gray-50 p-6 rounded-lg shadow mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center bg-gray-700 text-white p-2 rounded">
               STUDENT GOALS
             </h2>
             <div className="space-y-4">
               <FormattedSection title="Goal Overview:" content={goal.goalOverview} />
-              <FormattedSection 
-                title="Aligned Standards:" 
-                content={goal.alignedStandard?.join(", ") || "N/A"} 
-              />
-              <FormattedSection 
-                title="Recommended Strategies:" 
-                content={goal.recommendedStrategies?.join(", ") || "N/A"} 
-              />
-              <FormattedSection title="Measurement:" content={goal.goalMeasurement} />
+              <FormattedSection title="Aligned Standards:" content={goal.alignedStandard?.join(", ") || "N/A"} />
+              <FormattedSection title="Recommended Strategies:" content={goal.recommendedStrategies?.join(", ") || "N/A"} />
             </div>
           </div>
         </div>
@@ -258,7 +307,6 @@ export default function IEPReport() {
   );
 }
 
-// Helper components
 const InfoRow = ({ label, value }) => (
   <div className="border-b border-gray-300 pb-2">
     <p className="font-semibold text-gray-700">{label}</p>

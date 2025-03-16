@@ -14,10 +14,14 @@ export function IEPProvider({ children }) {
   // Store completed IEP reports
   const [iepReports, setIepReports] = useState([]);
 
-  const updateStudentInfo = (data) => setIepData((prev) => ({ ...prev, studentInfo: data }));
-  const updateNeeds = (data) => setIepData((prev) => ({ ...prev, needs: data }));
-  const updateStrengths = (data) => setIepData((prev) => ({ ...prev, strengths: data }));
-  const updateGoal = (data) => setIepData((prev) => ({ ...prev, goal: data }));
+  const updateStudentInfo = (data) =>
+    setIepData((prev) => ({ ...prev, studentInfo: data }));
+  const updateNeeds = (data) =>
+    setIepData((prev) => ({ ...prev, needs: data }));
+  const updateStrengths = (data) =>
+    setIepData((prev) => ({ ...prev, strengths: data }));
+  const updateGoal = (data) =>
+    setIepData((prev) => ({ ...prev, goal: data }));
 
   const finalizeReport = () => {
     const report = { ...iepData };
